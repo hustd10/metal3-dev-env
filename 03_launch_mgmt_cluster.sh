@@ -450,9 +450,14 @@ function start_management_cluster () {
 
 # Kill and remove the running ironic containers
 "$BMOPATH"/tools/remove_local_ironic.sh
+./cluster_cleanup.sh
 
 create_clouds_yaml
 if [ "${EPHEMERAL_CLUSTER}" != "tilt" ]; then
+  # 提前拉取并 tag 镜像，以免下载失败
+  docker pull kubesphere/kube-rbac-proxy:v0.8.0
+  docker tag docker.io/kubesphere/kube-rbac-proxy:v0.8.0 gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
+	
   start_management_cluster
   kubectl create namespace metal3
 

@@ -92,6 +92,7 @@ FILESYSTEM="${FILESYSTEM:=/}"
 
 # Reusable repository cloning function
 clone_repo() {
+  set +e
   local REPO_URL="$1"
   local REPO_BRANCH="$2"
   local REPO_PATH="$3"
@@ -102,7 +103,12 @@ clone_repo() {
   fi
   if [[ ! -d "${REPO_PATH}" ]] ; then
     pushd "${M3PATH}" || exit
+    retry_num=0 
     git clone "${REPO_URL}" "${REPO_PATH}"
+    while [ $? -ne 0 ] && [ $retry_num -lt 10 ]; do
+      retry_num=`expr $retry_num + 1`
+      git clone "${REPO_URL}" "${REPO_PATH}"
+    done
     popd || exit
     pushd "${REPO_PATH}" || exit
     git checkout "${REPO_BRANCH}"
@@ -110,6 +116,7 @@ clone_repo() {
     git pull -r || true
     popd || exit
   fi
+  set -e
 }
 
 # Configure common environment variables
@@ -129,14 +136,14 @@ export FORCE_REPO_UPDATE="${FORCE_REPO_UPDATE:-true}"
 
 export M3PATH="${M3PATH:-${GOPATH}/src/github.com/metal3-io}"
 export BMOPATH="${BMOPATH:-${M3PATH}/baremetal-operator}"
-export BMOREPO="${BMOREPO:-https://github.com/metal3-io/baremetal-operator.git}"
+export BMOREPO="${BMOREPO:-https://github.com/hustd10/baremetal-operator.git}"
 export BMO_BASE_URL="${BMO_BASE_URL:-metal3-io/baremetal-operator}"
 
 export RUN_LOCAL_IRONIC_SCRIPT="${BMOPATH}/tools/run_local_ironic.sh"
 
 export CAPM3PATH="${CAPM3PATH:-${M3PATH}/cluster-api-provider-metal3}"
 export CAPM3_BASE_URL="${CAPM3_BASE_URL:-metal3-io/cluster-api-provider-metal3}"
-export CAPM3REPO="${CAPM3REPO:-https://github.com/${CAPM3_BASE_URL}}"
+export CAPM3REPO="${CAPM3REPO:-https://github.com/hustd10/cluster-api-provider-metal3}"
 export CAPM3RELEASEBRANCH="${CAPM3RELEASEBRANCH:-main}"
 
 if [[ "${CAPM3RELEASEBRANCH}" == "release-1.1" ]]; then

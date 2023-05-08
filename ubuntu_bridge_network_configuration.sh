@@ -14,18 +14,29 @@ if [ "$MANAGE_PRO_BRIDGE" == "y" ]; then
      # dnsmasq being run, we don't want that as we have our own dnsmasq, so set
      # the IP address here.
      # Create a veth iterface peer.
-     sudo ip link add ironicendpoint type veth peer name ironic-peer
+     ip link show ironicendpoint
+     need_create_ironicendpoint=0
+     if [ $? -ne 0 ]; then
+       need_create_ironicendpoint=1
+       sudo ip link add ironicendpoint type veth peer name ironic-peer
+     fi
      # Create provisioning bridge.
-     sudo brctl addbr provisioning
+     if [ -z "`brctl show |grep -w provisioning`" ]; then
+       sudo brctl addbr provisioning
+     fi 
      # sudo ifconfig provisioning 172.22.0.1 netmask 255.255.255.0 up
      # Use ip command. ifconfig commands are deprecated now.
      sudo ip link set provisioning up
-     if [[ "${BARE_METAL_PROVISIONER_SUBNET_IPV6_ONLY}" = "true" ]]; then
-        sudo ip -6 addr add "${BARE_METAL_PROVISIONER_IP}"/"${BARE_METAL_PROVISIONER_CIDR}" dev ironicendpoint
-      else
-        sudo ip addr add dev ironicendpoint "${BARE_METAL_PROVISIONER_IP}"/"${BARE_METAL_PROVISIONER_CIDR}"
+     if [ $need_create_ironicendpoint -eq 1 ]; then
+       if [[ "${BARE_METAL_PROVISIONER_SUBNET_IPV6_ONLY}" = "true" ]]; then
+          sudo ip -6 addr add "${BARE_METAL_PROVISIONER_IP}"/"${BARE_METAL_PROVISIONER_CIDR}" dev ironicendpoint
+        else
+          sudo ip addr add dev ironicendpoint "${BARE_METAL_PROVISIONER_IP}"/"${BARE_METAL_PROVISIONER_CIDR}"
+       fi
      fi
-     sudo brctl addif provisioning ironic-peer
+     if [ -z "`brctl show provisioning |grep -w ironic-peer`" ]; then
+       sudo brctl addif provisioning ironic-peer
+     fi
      sudo ip link set ironicendpoint up
      sudo ip link set ironic-peer up
 

@@ -128,7 +128,8 @@ if [[ "${EPHEMERAL_CLUSTER}" = "minikube" ]]; then
 # Install Kind for both Kind and tilt
 else
   if ! command -v kind &>/dev/null || [[ "v$(kind version -q)" != "${KIND_VERSION}" ]]; then
-      wget --no-verbose -O "./kind" "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-$(uname)-amd64"
+      #wget --no-verbose -O "./kind" "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-$(uname)-amd64"
+      cp ./dependencies/kind-linux-amd64 ./kind
       chmod +x ./kind
       sudo mv kind "/usr/local/bin/"
   fi
@@ -163,7 +164,8 @@ fi
 
 # Install clusterctl client
 install_clusterctl() {
-  wget --no-verbose -O clusterctl "https://github.com/kubernetes-sigs/cluster-api/releases/download/${CAPIRELEASE}/clusterctl-linux-amd64"
+  #wget --no-verbose -O clusterctl "https://github.com/kubernetes-sigs/cluster-api/releases/download/${CAPIRELEASE}/clusterctl-linux-amd64"
+  cp ./dependencies/clusterctl-linux-amd64 clusterctl
   chmod +x ./clusterctl
   sudo mv ./clusterctl /usr/local/bin/
 }
@@ -297,3 +299,5 @@ init_minikube() {
 if [[ "${EPHEMERAL_CLUSTER}" = "minikube" ]]; then
   init_minikube
 fi
+
+go env -w GOPROXY=https://goproxy.cn,direct
