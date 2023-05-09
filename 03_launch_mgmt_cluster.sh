@@ -482,3 +482,5 @@ elif [ "${EPHEMERAL_CLUSTER}" == "tilt" ]; then
 
 source tilt-setup/deploy_tilt_env.sh
 fi
+
+./fix_capi_images.sh
