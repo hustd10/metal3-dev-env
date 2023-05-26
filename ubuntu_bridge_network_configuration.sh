@@ -14,12 +14,14 @@ if [ "$MANAGE_PRO_BRIDGE" == "y" ]; then
      # dnsmasq being run, we don't want that as we have our own dnsmasq, so set
      # the IP address here.
      # Create a veth iterface peer.
-     ip link show ironicendpoint
+     set +e
      need_create_ironicendpoint=0
+     ip link show ironicendpoint
      if [ $? -ne 0 ]; then
        need_create_ironicendpoint=1
        sudo ip link add ironicendpoint type veth peer name ironic-peer
      fi
+     set -e
      # Create provisioning bridge.
      if [ -z "`brctl show |grep -w provisioning`" ]; then
        sudo brctl addbr provisioning

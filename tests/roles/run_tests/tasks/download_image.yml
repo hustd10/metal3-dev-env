@@ -14,7 +14,7 @@
       - name: Download image.
         block:
           - debug:
-              msg: "Local image {{ IMAGE_LOCATION }}/{{ IMAGE_NAME }} is not found, starting to download"
+              msg: "Local image {{ IRONIC_IMAGE_DIR }}/{{ IMAGE_NAME }} is not found, starting to download"
 
           - name: Verify specific image containing newer version of cloud-init is downloaded
             shell: | 
