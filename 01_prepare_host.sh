@@ -6,6 +6,12 @@ source lib/logging.sh
 # shellcheck disable=SC1091
 source lib/common.sh
 
+#git config --global --unset http.proxy
+#git config --global --unset https.proxy
+git config --global https.proxy http://127.0.0.1:1080
+git config --global https.proxy https://127.0.0.1:1080
+DEPENDENCIES_DIR=${SCRIPTDIR}/dependencies
+
 if [[ "$(id -u)" -eq 0 ]]; then
   echo "Please run 'make' as a non-root user"
   exit 1
@@ -96,7 +102,8 @@ if ! kubectl krew > /dev/null 2>&1; then
   KERNEL_OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
   ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
   KREW="krew-${KERNEL_OS}_${ARCH}" &&
-  curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
+  #curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
+  cp ${DEPENDENCIES_DIR}/krew-linux_amd64.tar.gz . &&
   tar zxvf "${KREW}.tar.gz" &&
   rm -f "${KREW}.tar.gz" &&
   ./"${KREW}" install krew
@@ -127,9 +134,10 @@ if [[ "${EPHEMERAL_CLUSTER}" = "minikube" ]]; then
   fi
 # Install Kind for both Kind and tilt
 else
+  pwd
   if ! command -v kind &>/dev/null || [[ "v$(kind version -q)" != "${KIND_VERSION}" ]]; then
       #wget --no-verbose -O "./kind" "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-$(uname)-amd64"
-      cp ./dependencies/kind-linux-amd64 ./kind
+      cp ${DEPENDENCIES_DIR}/kind-linux-amd64 ./kind
       chmod +x ./kind
       sudo mv kind "/usr/local/bin/"
   fi
@@ -150,7 +158,8 @@ if [ "${KUBECTL_LOCAL}" != "${KUBECTL_LATEST}" ]; then
 fi
 
 if ! command -v kustomize &>/dev/null ; then
-    wget --no-verbose "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
+    #wget --no-verbose "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
+    cp ${DEPENDENCIES_DIR}/kustomize_v4.4.1_linux_amd64.tar.gz .
     tar -xzvf "kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
     chmod +x kustomize
     sudo mv kustomize /usr/local/bin/
@@ -165,7 +174,7 @@ fi
 # Install clusterctl client
 install_clusterctl() {
   #wget --no-verbose -O clusterctl "https://github.com/kubernetes-sigs/cluster-api/releases/download/${CAPIRELEASE}/clusterctl-linux-amd64"
-  cp ./dependencies/clusterctl-linux-amd64 clusterctl
+  cp ${DEPENDENCIES_DIR}/clusterctl-linux-amd64 clusterctl
   chmod +x ./clusterctl
   sudo mv ./clusterctl /usr/local/bin/
 }

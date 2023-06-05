@@ -459,6 +459,9 @@ if [ "${EPHEMERAL_CLUSTER}" != "tilt" ]; then
   docker tag docker.io/kubesphere/kube-rbac-proxy:v0.8.0 gcr.io/kubebuilder/kube-rbac-proxy:v0.8.0
 	
   start_management_cluster
+
+  ./fix_cert-manager_images.sh
+
   kubectl create namespace metal3
 
   patch_clusterctl
