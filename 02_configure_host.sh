@@ -279,28 +279,36 @@ VBMC_IMAGE=${VBMC_LOCAL_IMAGE:-$VBMC_IMAGE}
 SUSHY_TOOLS_IMAGE=${SUSHY_TOOLS_LOCAL_IMAGE:-$SUSHY_TOOLS_IMAGE}
 
 # Start httpd container
-if [[ $OS == ubuntu ]]; then
-  #shellcheck disable=SC2086
-  sudo "${CONTAINER_RUNTIME}" run -d --net host --privileged --name httpd-infra ${POD_NAME_INFRA} \
-      -v "$IRONIC_DATA_DIR":/shared --entrypoint /bin/runhttpd \
-      --env "PROVISIONING_INTERFACE=ironicendpoint" "${IRONIC_IMAGE}"
-else
-  #shellcheck disable=SC2086
-  sudo "${CONTAINER_RUNTIME}" run -d --net host --name httpd-infra ${POD_NAME_INFRA} \
-      -v "$IRONIC_DATA_DIR":/shared --entrypoint /bin/runhttpd \
-      "${IRONIC_IMAGE}"
+if [[ -z `docker ps | grep -w httpd-infra` ]]; then
+  if [[ $OS == ubuntu ]]; then
+    #shellcheck disable=SC2086
+    sudo "${CONTAINER_RUNTIME}" run -d --net host --privileged --name httpd-infra ${POD_NAME_INFRA} \
+        -v "$IRONIC_DATA_DIR":/shared --entrypoint /bin/runhttpd \
+        --env "PROVISIONING_INTERFACE=ironicendpoint" "${IRONIC_IMAGE}"
+  else
+    #shellcheck disable=SC2086
+    sudo "${CONTAINER_RUNTIME}" run -d --net host --name httpd-infra ${POD_NAME_INFRA} \
+        -v "$IRONIC_DATA_DIR":/shared --entrypoint /bin/runhttpd \
+        "${IRONIC_IMAGE}"
+  fi
 fi
 
 # Start vbmc and sushy containers
-#shellcheck disable=SC2086
-sudo "${CONTAINER_RUNTIME}" run -d --net host --name vbmc ${POD_NAME_INFRA} \
-     -v "$WORKING_DIR/virtualbmc/vbmc":/root/.vbmc -v "/root/.ssh":/root/ssh \
-     "${VBMC_IMAGE}"
 
-#shellcheck disable=SC2086
-sudo "${CONTAINER_RUNTIME}" run -d --net host --name sushy-tools ${POD_NAME_INFRA} \
-     -v "$WORKING_DIR/virtualbmc/sushy-tools":/root/sushy -v "/root/.ssh":/root/ssh \
-     "${SUSHY_TOOLS_IMAGE}"
+if [[ -z `docker ps | grep -w vbmc` ]]; then
+  #shellcheck disable=SC2086
+  sudo "${CONTAINER_RUNTIME}" run -d --net host --name vbmc ${POD_NAME_INFRA} \
+       -v "$WORKING_DIR/virtualbmc/vbmc":/root/.vbmc -v "/root/.ssh":/root/ssh \
+       "${VBMC_IMAGE}"
+fi
+
+
+if [[ -z `docker ps | grep -w sushy-tools` ]]; then
+  #shellcheck disable=SC2086
+  sudo "${CONTAINER_RUNTIME}" run -d --net host --name sushy-tools ${POD_NAME_INFRA} \
+       -v "$WORKING_DIR/virtualbmc/sushy-tools":/root/sushy -v "/root/.ssh":/root/ssh \
+       "${SUSHY_TOOLS_IMAGE}"
+fi
 
 # Installing the openstack/ironic clients on the host is optional
 # if not installed, we copy a wrapper to OPENSTACKCLIENT_PATH which
