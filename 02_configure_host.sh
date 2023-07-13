@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -xe
 
+git config --global http.postBuffer 524288000
+
 # shellcheck disable=SC1091
 source lib/logging.sh
 # shellcheck disable=SC1091

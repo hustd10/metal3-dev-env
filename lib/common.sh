@@ -104,7 +104,8 @@ clone_repo() {
   if [[ ! -d "${REPO_PATH}" ]] ; then
     pushd "${M3PATH}" || exit
     retry_num=0 
-    git clone "${REPO_URL}" "${REPO_PATH}"
+    git config --global http.postBuffer 524288000
+    git clone "${REPO_URL}" "${REPO_PATH}" --progress --verbose
     while [ $? -ne 0 ] && [ $retry_num -lt 10 ]; do
       retry_num=`expr $retry_num + 1`
       git clone "${REPO_URL}" "${REPO_PATH}"
